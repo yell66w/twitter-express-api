@@ -1,6 +1,6 @@
 import { UserController } from "./controller/UserController";
 import { PostController } from "./controller/PostController";
-
+const authorization = require("./middleware/authorization");
 export const Routes = [
   {
     method: "get",
@@ -49,6 +49,13 @@ export const Routes = [
     route: "/login",
     controller: UserController,
     action: "login",
+  },
+  {
+    method: "get",
+    route: "/verify",
+    controller: UserController,
+    middleware: authorization,
+    action: "verify",
   },
   {
     method: "get",

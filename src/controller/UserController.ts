@@ -121,4 +121,12 @@ export class UserController {
     await this.userRepository.save(targetUser);
     return following ? "Unfollowed" : "Followed";
   }
+
+  async verify(request: Request, response: Response, next: NextFunction) {
+    try {
+      response.json(true);
+    } catch (error) {
+      response.json(false);
+    }
+  }
 }
