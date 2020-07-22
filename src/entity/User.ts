@@ -10,8 +10,14 @@ import { Post } from "./Post";
 
 @Entity()
 export class User {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn("uuid")
   id: number;
+
+  @Column()
+  username: string;
+
+  @Column()
+  password: string;
 
   @Column()
   firstName: string;

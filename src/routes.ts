@@ -39,6 +39,18 @@ export const Routes = [
     action: "follow",
   },
   {
+    method: "post",
+    route: "/register",
+    controller: UserController,
+    action: "register",
+  },
+  {
+    method: "post",
+    route: "/login",
+    controller: UserController,
+    action: "login",
+  },
+  {
     method: "get",
     route: "/posts",
     controller: PostController,
