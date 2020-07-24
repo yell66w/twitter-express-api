@@ -14,6 +14,7 @@ module.exports = async (
     }
     const payload = jwt.verify(jwtToken, process.env.jwtSecret);
     request.user = payload.user;
+    nextFunction();
   } catch (error) {
     response.status(403).json({ message: "Not Authorized" });
   }

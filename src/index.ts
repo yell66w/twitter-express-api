@@ -5,14 +5,16 @@ import * as bodyParser from "body-parser";
 import { Request, Response } from "express";
 import { Routes } from "./routes";
 
+const cors = require("cors");
 createConnection()
   .then(async () => {
     const app = express();
     app.use(bodyParser.json());
-
+    app.use(cors());
     Routes.forEach((route) => {
       (app as any)[route.method](
         route.route,
+        route.middleware,
         (req: Request, res: Response, next: Function) => {
           const result = new (route.controller as any)()[route.action](
             req,
@@ -32,10 +34,10 @@ createConnection()
       );
     });
 
-    app.listen(3000);
+    app.listen(4000);
 
     console.log(
-      "Express server has started on port 3000. Open http://localhost:3000/ to see results"
+      "Express server has started on port 4000. Open http://localhost:4000/ to see results"
     );
   })
   .catch((error) => console.log(error));

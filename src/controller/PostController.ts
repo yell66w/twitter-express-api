@@ -15,7 +15,7 @@ export class PostController {
     });
   }
   async save(request: Request, response: Response, next: NextFunction) {
-    const user = await this.userRepository.findOne(request.body.user, {
+    const user = await this.userRepository.findOne(request.user, {
       relations: ["posts"],
     }); //subject to change (just find the current user)
     const post = await this.postRepository.save({

@@ -20,13 +20,7 @@ export class User {
   password: string;
 
   @Column()
-  firstName: string;
-
-  @Column()
-  lastName: string;
-
-  @Column()
-  age: number;
+  displayName: string;
 
   @OneToMany(() => Post, (post) => post.user)
   posts: Post[];

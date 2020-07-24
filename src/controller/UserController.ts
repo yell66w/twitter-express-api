@@ -1,4 +1,4 @@
-import { getRepository } from "typeorm";
+import { getRepository, Not } from "typeorm";
 import { NextFunction, Request, Response } from "express";
 import { User } from "../entity/User";
 const bcrypt = require("bcrypt");
@@ -10,6 +10,25 @@ export class UserController {
     return this.userRepository.find({
       relations: ["posts", "followers", "following"],
     });
+  }
+
+  async whoToFollow(request: Request, response: Response, next: NextFunction) {
+    const currentUser = await this.userRepository.findOne(request.user, {
+      relations: ["following"],
+    });
+    const limit = await request.query.limit;
+    let following = [];
+    currentUser.following.map((followed) => {
+      following.push(followed.id);
+    });
+    const users = await this.userRepository
+      .createQueryBuilder("user")
+      .limit(limit)
+      .where("id NOT IN (:...following)", {
+        following,
+      })
+      .getMany();
+    return users;
   }
 
   async one(request: Request, response: Response, next: NextFunction) {
@@ -35,14 +54,7 @@ export class UserController {
   }
   async register(request: Request, response: Response, next: NextFunction) {
     //issue - refactor or improve registration process
-    const {
-      firstName,
-      lastName,
-      age,
-      username,
-      password,
-      confirmPassword,
-    } = request.body;
+    const { displayName, username, password, confirmPassword } = request.body;
     const saltRounds = 10;
     if (password != confirmPassword) {
       response.status(409).json({ message: "Passwords do not match" });
@@ -54,9 +66,7 @@ export class UserController {
       try {
         const hashedPassword = bcrypt.hashSync(password, saltRounds);
         const newUser = await this.userRepository.save({
-          firstName,
-          lastName,
-          age,
+          displayName,
           username,
           password: hashedPassword,
         });
@@ -97,7 +107,7 @@ export class UserController {
     const targetUser = await this.userRepository.findOne(request.params.id, {
       relations: ["followers"],
     });
-    const currentUser = await this.userRepository.findOne(8, {
+    const currentUser = await this.userRepository.findOne(request.user, {
       relations: ["following"],
     }); //subject to change 5
     let following = false;
@@ -127,6 +137,24 @@ export class UserController {
       response.json(true);
     } catch (error) {
       response.json(false);
+    }
+  }
+  async profile(request: Request, response: Response, next: NextFunction) {
+    try {
+      const user = await this.userRepository.findOne(request.user, {
+        relations: ["posts", "following", "followers"],
+      });
+      const { displayName, username, posts, following, followers } = user;
+      response.json({
+        displayName,
+        username,
+        posts,
+        following,
+        followers,
+      });
+    } catch (error) {
+      console.error(error.message);
+      response.status(500).send("Server error");
     }
   }
 }
