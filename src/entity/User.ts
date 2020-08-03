@@ -7,6 +7,7 @@ import {
   JoinTable,
 } from "typeorm";
 import { Post } from "./Post";
+import { Length } from "class-validator";
 
 @Entity()
 export class User {
@@ -14,12 +15,14 @@ export class User {
   id: number;
 
   @Column()
+  @Length(1, 255)
   username: string;
 
   @Column()
   password: string;
 
   @Column()
+  @Length(1, 255)
   displayName: string;
 
   @OneToMany(() => Post, (post) => post.user)

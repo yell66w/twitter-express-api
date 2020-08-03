@@ -1,6 +1,8 @@
-import { getRepository, Not } from "typeorm";
+import { getRepository } from "typeorm";
 import { NextFunction, Request, Response } from "express";
 import { User } from "../entity/User";
+import { validate } from "class-validator";
+
 const bcrypt = require("bcrypt");
 const jwtGenerator = require("../utils/jwtGenerator");
 export class UserController {
@@ -17,13 +19,14 @@ export class UserController {
       relations: ["following"],
     });
     const limit = await request.query.limit;
-    let following = [];
+    let following = [currentUser.id];
     currentUser.following.map((followed) => {
       following.push(followed.id);
     });
     const users = await this.userRepository
       .createQueryBuilder("user")
       .limit(limit)
+      .orderBy("RANDOM()")
       .where("id NOT IN (:...following)", {
         following,
       })
@@ -56,8 +59,15 @@ export class UserController {
     //issue - refactor or improve registration process
     const { displayName, username, password, confirmPassword } = request.body;
     const saltRounds = 10;
+    if (password.length < 8 || password.length > 24) {
+      response
+        .status(409)
+        .json({ message: "Passwords should be 8-24 characters long" });
+      return false;
+    }
     if (password != confirmPassword) {
       response.status(409).json({ message: "Passwords do not match" });
+      return false;
     }
     const isUserExists = await this.userRepository.findOne({
       where: { username },
@@ -65,13 +75,21 @@ export class UserController {
     if (!isUserExists) {
       try {
         const hashedPassword = bcrypt.hashSync(password, saltRounds);
-        const newUser = await this.userRepository.save({
+        const newUser = await this.userRepository.create({
           displayName,
           username,
           password: hashedPassword,
         });
+
+        const errors = await validate(newUser);
+        if (errors.length > 0) {
+          response.status(403).json({ message: "Validation Failed", errors });
+        } else {
+          await this.userRepository.save(newUser);
+        }
         const token = jwtGenerator(newUser.id);
         response.json({ token });
+        return true;
       } catch (error) {
         response.status(500).json({ message: "Server error" });
       }
@@ -112,7 +130,7 @@ export class UserController {
     }); //subject to change 5
     let following = false;
     currentUser.following.map((followedUser, index) => {
-      if (parseInt(request.params.id) === followedUser.id) {
+      if (request.params.id === followedUser.id) {
         following = true;
         currentUser.following.splice(index, 1);
         targetUser.followers.map((follower, index2) => {
@@ -145,12 +163,19 @@ export class UserController {
         relations: ["posts", "following", "followers"],
       });
       const { displayName, username, posts, following, followers } = user;
+      const postsCount = posts.length;
+      const followingCount = following.length;
+      const followersCount = followers.length;
+
       response.json({
         displayName,
         username,
         posts,
         following,
         followers,
+        postsCount,
+        followingCount,
+        followersCount,
       });
     } catch (error) {
       console.error(error.message);

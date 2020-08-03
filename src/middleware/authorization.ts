@@ -8,14 +8,14 @@ module.exports = async (
   nextFunction: NextFunction
 ) => {
   try {
-    const jwtToken = request.header("token");
+    const jwtToken = await request.header("token");
     if (!jwtToken) {
-      response.status(403).json({ message: "Not Authorized" });
+      response.status(403).json({ message: "No Token" });
     }
     const payload = jwt.verify(jwtToken, process.env.jwtSecret);
     request.user = payload.user;
     nextFunction();
   } catch (error) {
-    response.status(403).json({ message: "Not Authorized" });
+    response.status(403).json({ message: "Server Error Token" });
   }
 };

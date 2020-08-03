@@ -6,7 +6,6 @@ function jwtGenerator(userId) {
   };
 
   const token = jwt.sign(payload, process.env.jwtSecret, { expiresIn: "1hr" });
-  console.log(token, payload);
   return token;
 }
 

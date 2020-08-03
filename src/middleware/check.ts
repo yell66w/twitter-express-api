@@ -7,7 +7,6 @@ module.exports = async (
   next: NextFunction
 ) => {
   try {
-    console.log("nice");
     next();
   } catch (error) {
     response.status(403).json({ message: "Not nice" });
